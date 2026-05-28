@@ -16,8 +16,12 @@
     "dns",
     "mx"
   ],
-  "author": "",
+  "author": "Shreyash Patil",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ShreyashPatil530/smtp-email-verifier.git"
+  },
   "dependencies": {
     "validator": "^13.11.0"
   },
