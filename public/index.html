@@ -158,11 +158,6 @@
       <p>Syntax · DNS MX · SMTP <code style="color:#fff">RCPT TO</code> · Typo detection · Disposable-domain check — all in one JSON response.</p>
     </header>
 
-    <div id="smtp-banner" class="banner hidden">
-      <b>Heads up:</b> this host blocks outbound port 25, so the SMTP step will report
-      <code>unknown</code> on cloud-hosted demos. Syntax, typo and DNS checks work fully. Run locally for the SMTP probe.
-    </div>
-
     <div class="card">
       <form id="form" autocomplete="off">
         <input id="email" type="email" placeholder="user@example.com" required />
@@ -220,11 +215,6 @@
     const suggestionBox = $('suggestion');
     const metaBox = $('meta');
     const jsonBox = $('json');
-
-    // Show the port-25 banner if /health says SMTP is blocked.
-    fetch('/health').then((r) => r.json()).then((h) => {
-      if (h && h.smtpBlocked) document.getElementById('smtp-banner').classList.remove('hidden');
-    }).catch(() => {});
 
     document.querySelectorAll('.chip').forEach((chip) => {
       chip.addEventListener('click', () => {
