@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SMTP Email Verifier · Shreyash Patil</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📧</text></svg>" />
+  <style>
+    :root {
+      --bg: #0b1020;
+      --bg-2: #131a35;
+      --card: rgba(255, 255, 255, 0.06);
+      --border: rgba(255, 255, 255, 0.12);
+      --text: #e8ecf3;
+      --muted: #a3acc2;
+      --accent: #7c5cff;
+      --accent-2: #4ad6ff;
+      --green: #2ecc71;
+      --yellow: #f1c40f;
+      --red: #ff5e7e;
+      --code-bg: #0a0f24;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background:
+        radial-gradient(1200px 600px at 80% -10%, rgba(124,92,255,0.25), transparent 60%),
+        radial-gradient(900px 500px at -10% 20%, rgba(74,214,255,0.18), transparent 60%),
+        linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.55;
+    }
+    .container { max-width: 980px; margin: 0 auto; padding: 32px 20px 80px; }
+    header { text-align: center; padding: 24px 0 8px; }
+    header .badge {
+      display: inline-block; font-size: 12px; letter-spacing: 0.15em; text-transform: uppercase;
+      color: var(--accent-2); padding: 6px 12px; border: 1px solid var(--border);
+      border-radius: 999px; background: var(--card);
+    }
+    header h1 {
+      margin: 16px 0 8px; font-size: clamp(28px, 5vw, 44px); font-weight: 800;
+      background: linear-gradient(90deg, #fff, var(--accent-2));
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    header p { color: var(--muted); margin: 0 auto; max-width: 640px; }
+
+    .banner {
+      margin: 24px 0 0; padding: 12px 16px; border: 1px solid rgba(241,196,15,0.35);
+      background: rgba(241,196,15,0.08); border-radius: 10px; color: #ffe9a3;
+      font-size: 14px;
+    }
+    .banner b { color: #fff; }
+
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 24px; margin-top: 24px;
+      backdrop-filter: blur(8px);
+    }
+
+    form { display: flex; gap: 10px; flex-wrap: wrap; }
+    input[type=email], input[type=text] {
+      flex: 1 1 320px; min-width: 240px; padding: 14px 16px;
+      background: rgba(0,0,0,0.3); border: 1px solid var(--border);
+      border-radius: 10px; color: var(--text); font-size: 16px;
+      outline: none; transition: border 0.15s, box-shadow 0.15s;
+    }
+    input[type=email]:focus, input[type=text]:focus {
+      border-color: var(--accent); box-shadow: 0 0 0 4px rgba(124,92,255,0.18);
+    }
+    button {
+      padding: 14px 22px; border: none; border-radius: 10px; cursor: pointer;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: white; font-weight: 700; font-size: 15px; letter-spacing: 0.02em;
+      transition: transform 0.08s, filter 0.15s;
+    }
+    button:hover { filter: brightness(1.08); }
+    button:active { transform: translateY(1px); }
+    button:disabled { opacity: 0.6; cursor: not-allowed; filter: grayscale(0.4); }
+
+    .samples { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip {
+      font-size: 12px; padding: 6px 10px; border-radius: 999px; cursor: pointer;
+      background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+      color: var(--muted); transition: background 0.15s, color 0.15s;
+    }
+    .chip:hover { background: rgba(124,92,255,0.18); color: #fff; }
+
+    .verdict {
+      display: flex; align-items: center; gap: 12px; padding: 14px 16px;
+      border-radius: 12px; margin-top: 6px; font-weight: 700;
+    }
+    .verdict .dot { width: 12px; height: 12px; border-radius: 50%; }
+    .verdict.valid   { background: rgba(46,204,113,0.12); color: #b6f0c8; border: 1px solid rgba(46,204,113,0.35); }
+    .verdict.unknown { background: rgba(241,196,15,0.10); color: #ffe9a3; border: 1px solid rgba(241,196,15,0.35); }
+    .verdict.invalid { background: rgba(255,94,126,0.10); color: #ffb9c6; border: 1px solid rgba(255,94,126,0.35); }
+    .verdict.valid   .dot { background: var(--green); }
+    .verdict.unknown .dot { background: var(--yellow); }
+    .verdict.invalid .dot { background: var(--red); }
+
+    .meta {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px; margin-top: 16px;
+    }
+    .meta .kv {
+      background: rgba(0,0,0,0.25); border: 1px solid var(--border);
+      border-radius: 10px; padding: 10px 12px;
+    }
+    .meta .kv .k { font-size: 11px; text-transform: uppercase; color: var(--muted); letter-spacing: 0.1em; }
+    .meta .kv .v { font-size: 14px; word-break: break-word; }
+
+    .suggestion {
+      margin-top: 14px; padding: 10px 14px; border-radius: 10px;
+      background: rgba(74,214,255,0.08); border: 1px solid rgba(74,214,255,0.3);
+      color: #cdeffd; font-size: 14px;
+    }
+    .suggestion code { color: #fff; background: rgba(0,0,0,0.35); padding: 2px 6px; border-radius: 4px; }
+
+    pre {
+      background: var(--code-bg); border: 1px solid var(--border); border-radius: 12px;
+      padding: 16px; overflow-x: auto; font-size: 13px; line-height: 1.5;
+      color: #d6dcef;
+    }
+    .section-title {
+      display: flex; align-items: center; justify-content: space-between;
+      margin: 0 0 12px; font-size: 14px; text-transform: uppercase; letter-spacing: 0.12em;
+      color: var(--muted);
+    }
+    .copy {
+      font-size: 12px; padding: 4px 10px; background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border); color: var(--muted); border-radius: 6px;
+      cursor: pointer;
+    }
+    .copy:hover { color: #fff; background: rgba(124,92,255,0.18); }
+
+    .spinner {
+      width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.25);
+      border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite;
+      display: inline-block; vertical-align: -3px; margin-right: 8px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    footer { text-align: center; color: var(--muted); font-size: 13px; margin-top: 36px; }
+    footer a { color: var(--accent-2); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    .hidden { display: none; }
+    .endpoints { font-size: 13px; color: var(--muted); }
+    .endpoints code { color: #fff; background: rgba(0,0,0,0.35); padding: 2px 6px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <span class="badge">📧 SMTP Email Verifier</span>
+      <h1>Verify any email address</h1>
+      <p>Syntax · DNS MX · SMTP <code style="color:#fff">RCPT TO</code> · Typo detection · Disposable-domain check — all in one JSON response.</p>
+    </header>
+
+    <div id="smtp-banner" class="banner hidden">
+      <b>Heads up:</b> this host blocks outbound port 25, so the SMTP step will report
+      <code>unknown</code> on cloud-hosted demos. Syntax, typo and DNS checks work fully. Run locally for the SMTP probe.
+    </div>
+
+    <div class="card">
+      <form id="form" autocomplete="off">
+        <input id="email" type="email" placeholder="user@example.com" required />
+        <button id="submit" type="submit">Verify →</button>
+      </form>
+      <div class="samples">
+        <span class="chip" data-sample="test@gmail.com">test@gmail.com</span>
+        <span class="chip" data-sample="user@gmial.com">user@gmial.com (typo)</span>
+        <span class="chip" data-sample="abcgmail.com">abcgmail.com (no @)</span>
+        <span class="chip" data-sample="user@@gmail.com">user@@gmail.com</span>
+        <span class="chip" data-sample="foo@mailinator.com">foo@mailinator.com (disposable)</span>
+        <span class="chip" data-sample="randomfake123@yahoo.com">randomfake123@yahoo.com</span>
+      </div>
+    </div>
+
+    <div id="result-card" class="card hidden">
+      <div id="verdict" class="verdict"><span class="dot"></span><span id="verdict-text"></span></div>
+      <div id="suggestion" class="suggestion hidden"></div>
+      <div class="meta" id="meta"></div>
+    </div>
+
+    <div id="json-card" class="card hidden">
+      <div class="section-title">
+        <span>Raw JSON response</span>
+        <button class="copy" id="copy-btn" type="button">Copy</button>
+      </div>
+      <pre id="json"></pre>
+    </div>
+
+    <div class="card">
+      <div class="section-title"><span>API endpoints</span></div>
+      <div class="endpoints">
+        <p>• <code>GET /api/verify?email=user@example.com</code></p>
+        <p>• <code>POST /api/verify</code> &nbsp;body: <code>{"email":"..."}</code></p>
+        <p>• <code>POST /api/verify-bulk</code> &nbsp;body: <code>{"emails":["a@x.com","b@y.com"]}</code> (max 20)</p>
+        <p>• <code>GET /health</code></p>
+      </div>
+    </div>
+
+    <footer>
+      Built by <a href="https://github.com/ShreyashPatil530" target="_blank" rel="noopener">Shreyash Patil</a> ·
+      <a href="https://github.com/ShreyashPatil530/smtp-email-verifier" target="_blank" rel="noopener">Source on GitHub</a>
+    </footer>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const form = $('form');
+    const emailInput = $('email');
+    const submitBtn = $('submit');
+    const resultCard = $('result-card');
+    const jsonCard = $('json-card');
+    const verdict = $('verdict');
+    const verdictText = $('verdict-text');
+    const suggestionBox = $('suggestion');
+    const metaBox = $('meta');
+    const jsonBox = $('json');
+
+    // Show the port-25 banner if /health says SMTP is blocked.
+    fetch('/health').then((r) => r.json()).then((h) => {
+      if (h && h.smtpBlocked) document.getElementById('smtp-banner').classList.remove('hidden');
+    }).catch(() => {});
+
+    document.querySelectorAll('.chip').forEach((chip) => {
+      chip.addEventListener('click', () => {
+        emailInput.value = chip.dataset.sample;
+        form.dispatchEvent(new Event('submit', { cancelable: true }));
+      });
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = emailInput.value.trim();
+      if (!email) return;
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="spinner"></span>Verifying';
+      try {
+        const res = await fetch('/api/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        });
+        const data = await res.json();
+        render(data);
+      } catch (err) {
+        render({ result: 'invalid', subresult: 'network_error', error: String(err) });
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Verify →';
+      }
+    });
+
+    function render(data) {
+      resultCard.classList.remove('hidden');
+      jsonCard.classList.remove('hidden');
+
+      verdict.classList.remove('valid', 'unknown', 'invalid');
+      const cls = ['valid','unknown','invalid'].includes(data.result) ? data.result : 'invalid';
+      verdict.classList.add(cls);
+      const labelMap = {
+        valid:   '✅ VALID — mailbox confirmed',
+        unknown: '🟡 UNKNOWN — could not verify',
+        invalid: '🔴 INVALID — will not deliver',
+      };
+      verdictText.textContent = `${labelMap[cls] || 'RESULT'}  ·  ${data.subresult || ''}`;
+
+      if (data.didyoumean) {
+        suggestionBox.classList.remove('hidden');
+        suggestionBox.innerHTML = `Did you mean <code>${escapeHtml(data.didyoumean)}</code> ?`;
+      } else {
+        suggestionBox.classList.add('hidden');
+      }
+
+      const rows = [
+        ['Email', data.email],
+        ['Domain', data.domain || '—'],
+        ['Result Code', data.resultcode],
+        ['Subresult', data.subresult],
+        ['MX Records', (data.mxRecords && data.mxRecords.length) ? data.mxRecords.join(', ') : '—'],
+        ['Execution', (data.executiontime ?? 0) + 's'],
+        ['Error', data.error || '—'],
+        ['Timestamp', data.timestamp || '—'],
+      ];
+      metaBox.innerHTML = rows.map(([k, v]) =>
+        `<div class="kv"><div class="k">${k}</div><div class="v">${escapeHtml(String(v ?? '—'))}</div></div>`,
+      ).join('');
+
+      jsonBox.textContent = JSON.stringify(data, null, 2);
+    }
+
+    document.getElementById('copy-btn').addEventListener('click', () => {
+      navigator.clipboard.writeText(jsonBox.textContent || '').then(() => {
+        const btn = document.getElementById('copy-btn');
+        const old = btn.textContent;
+        btn.textContent = 'Copied!';
+        setTimeout(() => { btn.textContent = old; }, 1200);
+      });
+    });
+
+    function escapeHtml(s) {
+      return s.replace(/[&<>"']/g, (c) => ({
+        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;',
+      }[c]));
+    }
+  </script>
+</body>
+</html>

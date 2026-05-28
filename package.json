@@ -4,9 +4,13 @@
   "description": "Production-ready Email Verification Module with syntax checks, DNS MX lookup, SMTP mailbox verification, typo detection and unit tests",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
+    "start": "node server.js",
+    "cli": "node index.js",
     "test": "jest --coverage",
     "test:watch": "jest --watch"
+  },
+  "engines": {
+    "node": ">=18"
   },
   "keywords": [
     "email",
@@ -23,6 +27,7 @@
     "url": "https://github.com/ShreyashPatil530/smtp-email-verifier.git"
   },
   "dependencies": {
+    "express": "^4.22.2",
     "validator": "^13.11.0"
   },
   "devDependencies": {
@@ -32,6 +37,10 @@
     "testEnvironment": "node",
     "collectCoverageFrom": [
       "src/**/*.js"
+    ],
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/coverage/"
     ],
     "testTimeout": 15000
   }

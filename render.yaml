@@ -1,0 +1,23 @@
+# Render Blueprint — one-click deploy.
+# On Render: New → Blueprint → connect this repo. Render will pick up this file
+# automatically and provision the service below.
+services:
+  - type: web
+    name: smtp-email-verifier
+    runtime: node
+    plan: free
+    region: oregon
+    branch: main
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      # Render (and every other cloud host) blocks outbound TCP 25 to prevent
+      # spam. We set this flag so the UI shows a banner explaining why the
+      # SMTP step returns "unknown" in the hosted demo. The rest of the
+      # pipeline (syntax / typo / DNS / disposable) still works fully.
+      - key: SMTP_BLOCKED
+        value: "1"

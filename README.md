@@ -24,6 +24,8 @@
 - [Verification Pipeline](#-verification-pipeline)
 - [Installation](#-installation)
 - [Quick Start](#-quick-start)
+- [Web UI + REST API](#-web-ui--rest-api)
+- [Deployment (Render)](#-deployment-render)
 - [Response Format](#-response-format)
 - [Usage Examples](#-usage-examples)
 - [Project Structure](#-project-structure)
@@ -223,10 +225,76 @@ const { verifyEmail, getDidYouMean } = require('./');
 ### As a CLI
 
 ```bash
+npm run cli -- user@example.com another@example.org
+# or:
 node index.js user@example.com another@example.org
 ```
 
 > Multiple addresses are verified **in parallel** and printed as a JSON array.
+
+### As an HTTP server (web UI + REST API)
+
+```bash
+npm start
+# → http://localhost:3000   (web UI)
+# → http://localhost:3000/api/verify?email=user@example.com
+```
+
+---
+
+## 🌐 Web UI + REST API
+
+Running `npm start` boots an Express server that serves both a small web UI ([`public/index.html`](public/index.html)) and a JSON API ([`server.js`](server.js)).
+
+### Endpoints
+
+| Method | Path | Body / Query | Description |
+| ------ | ---- | ------------ | ----------- |
+| `GET`  | `/` | — | Web UI (single-page, no build step) |
+| `GET`  | `/health` | — | Liveness probe — used by Render |
+| `GET`  | `/api/verify` | `?email=user@example.com` | Verify one email |
+| `POST` | `/api/verify` | `{"email":"user@example.com"}` | Verify one email |
+| `POST` | `/api/verify-bulk` | `{"emails":["a@x.com","b@y.com"]}` | Verify up to 20 emails in parallel |
+
+### Quick test (curl)
+
+```bash
+curl "http://localhost:3000/api/verify?email=user@gmial.com"
+# → {"result":"invalid","subresult":"typo_detected","didyoumean":"user@gmail.com",...}
+```
+
+---
+
+## 🚀 Deployment (Render)
+
+The repo ships with a [`render.yaml`](render.yaml) **Blueprint**, so deployment is one click:
+
+1. Push the repo to GitHub (already done).
+2. Go to [render.com](https://render.com) → **New → Blueprint** → connect this repo.
+3. Render reads `render.yaml`, provisions a free web service, runs `npm install && npm start`, and exposes the URL.
+
+### ⚠️ Important: Port 25 is blocked on cloud hosts
+
+Render — and Heroku, Vercel, AWS, GCP, Azure — **block outbound TCP port 25** to prevent spam. That affects only the final SMTP `RCPT TO` step of the pipeline. On the hosted demo:
+
+| Stage | Works on Render? |
+| ----- | :--------------: |
+| Syntax validation | ✅ |
+| Typo / "did you mean?" detection | ✅ |
+| Disposable-domain check | ✅ |
+| DNS MX lookup | ✅ |
+| SMTP `RCPT TO` probe | ❌ (returns `unknown` + `smtp_connection_refused`) |
+
+The Blueprint sets `SMTP_BLOCKED=1`, which makes the UI display an honest banner explaining this. For full SMTP verification, clone the repo and run `npm start` on a machine where port 25 is open (most home connections, dev laptops, or a VPS with SMTP whitelisted).
+
+### Manual deploy (no Blueprint)
+
+If you don't want to use `render.yaml`:
+
+- **Build command:** `npm install`
+- **Start command:** `npm start`
+- **Health check path:** `/health`
+- **Environment:** `NODE_VERSION=20`, optionally `SMTP_BLOCKED=1`
 
 ---
 
@@ -350,7 +418,12 @@ smtp-email-verifier/
 │   ├── 🧪 typoDetector.test.js    # Typo + Levenshtein unit tests
 │   └── 🧪 smtp.test.js            # Real SMTP vs in-process fake server
 │
-├── 📜 index.js                    # Library + CLI entry point
+├── 📂 public/
+│   └── 🎨 index.html              # Single-page web UI (no build step)
+│
+├── 🌐 server.js                   # Express HTTP server (REST API + UI)
+├── 📜 index.js                    # CLI + library entry point
+├── 🚀 render.yaml                 # Render Blueprint for one-click deploy
 ├── 📜 package.json
 ├── 📜 .gitignore
 └── 📖 README.md
